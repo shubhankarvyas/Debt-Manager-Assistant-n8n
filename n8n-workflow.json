@@ -1,0 +1,283 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "n8n",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        0
+      ],
+      "id": "ca1181cb-a9bc-4ab2-a63f-ce6b3979b9a5",
+      "name": "Webhook",
+      "webhookId": "d3ede312-65fe-45b9-a548-370920fbc74a"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a debt assistant bot designed to retrieve and respond with customer debt details. You are connected to:\n\nA Google Sheet containing structured customer data.\n\nA Supabase Vector Store containing the same data in an embedded format for semantic search.\n\nYou receive the following fields from a voice assistant:\n\nName: {{ $json.body.name }}\n\nAmount: {{ $json.body.amount }}\n\nDue Date: {{ $json.body.due_date }}\n\nProduct: {{ $json.body.product }}\n\nIntent: {{ $json.body.intent }}\n\n Instructions:\n\nPrimary Lookup:\n\nIf the intent is to “fetch amount,” “fetch due date,” or “fetch product,” try to locate the person by exact name match in the Google Sheet first.\n\nIf the person is not found in the Google Sheet, fallback to searching the Supabase Vector Store.\n\nSearch Rules:\n\nAlways use exact match for names in the Google Sheet.\n\nUse semantic search (via Supabase Vector Store) only when no exact match is found or when instructed to do so explicitly.\n\nRespond Clearly:\n\nExample: “Amit’s due date is 25-05-2025.”\n\nBe precise, brief, and polite.\n\nError Handling:\n\nIf the name is missing or not found in either source, respond: “I couldn’t find that name. Could you please repeat or spell it?”\n\nIf the intent is unclear or unsupported, respond: “Could you please clarify what information you need?”\n\n🧪 Example Flows:\n\nInput: Name: “Rahul”, Intent: “fetch amount” → Response: “Rahul’s amount is ₹2,000.”\n\nInput: Name: “Dhruv”, Intent: “fetch product” → Response: “Dhruv purchased a watch.”\n\n",
+        "options": {
+          "systemMessage": "You are a helpful AI agent that assists with customer debt-related queries.\nUse the information from Google Sheets and Supabase to answer user questions accurately and politely.\n\nIf the user asks about financial data (like amount, due date, or product), search for the person by exact name in Google Sheets.\n\nOnly respond if the name is found; otherwise, ask the user to clarify or correct it.\n\nIf the user’s intent is unclear, ask them to restate their request clearly.\n\nUse the Supabase vector store if you need additional context or memory to answer more complex questions.\n\nAlways respond in a polite, professional tone suitable for a debt assistant.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        220,
+        0
+      ],
+      "id": "d2c3f90e-92a8-4ce0-b9d3-82a8133dcccc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        40,
+        240
+      ],
+      "id": "94c92e9f-9cdb-4b94-bd14-a3b05c8fe63d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "INcOUhu13FbZ8cIU",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15cx-FMLT0dG0kp4syNJf_6Qqv8190tOpL5K_6ZWy_NE",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15cx-FMLT0dG0kp4syNJf_6Qqv8190tOpL5K_6ZWy_NE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15cx-FMLT0dG0kp4syNJf_6Qqv8190tOpL5K_6ZWy_NE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        260
+      ],
+      "id": "c5cb77c9-4968-4524-9a32-6d68828fb199",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vtqb79Dskxi81dSC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "f1a4bb30-218f-4d0d-b532-8a5c898874cd",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "modelName": "models/text-embedding-004"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        280,
+        560
+      ],
+      "id": "cb1beb07-333b-49fb-a0f0-eacd230f76fe",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IFHK6wrNA1N0vgl7",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "This vector store contains customer financial data including:\n- Name (full name of the customer)\n- Phone (contact number)\n- Amount (the amount the customer owes)\n- Due Date (the payment due date)\n- Product (the product or service the customer purchased)\nThis data is used to help respond to customer queries about their debt or account status.\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        220
+      ],
+      "id": "345d8b6f-aad5-426a-a90f-f5e98b075fb6",
+      "name": "Answer questions with a vector store"
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        300,
+        400
+      ],
+      "id": "e6aee10d-019a-4db5-a241-245f5e8e3a10",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Sc5juxDZ1Y77FQfG",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        660,
+        480
+      ],
+      "id": "80d450b8-c6b8-4e6f-8550-a74cb46ce3b5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IFHK6wrNA1N0vgl7",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer questions with a vector store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3d2fb812-ff86-4fd8-8fc5-204d457f7058",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c18ab66769916c2ff8c9398a6cc134ec170f7b4671b332a74c4199b6d0f17d82"
+  },
+  "id": "fWXNWLSSQcGqmH8e",
+  "tags": []
+}
