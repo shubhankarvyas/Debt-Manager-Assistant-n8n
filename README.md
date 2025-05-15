@@ -19,6 +19,7 @@ This project is an AI-powered debt management assistant built using n8n, integra
 
 ```bash
 ├── n8n-workflow.json     # Exported n8n workflow with all nodes
+├── supabase.json         # Supabase vector store configuration and metadata
 ├── README.md             # This file
 └── /docs
     └── system_prompt.md  # AI Agent system instructions
